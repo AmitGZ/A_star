@@ -46,7 +46,8 @@ public class DrawPanel extends JPanel{
 	public void reset() {
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) 
-				Pixel_arr.get(i).get(j).setGround();
+				Pixel_arr.get(i).get(j).resetPixel();
+		open.clearList();
 	}
 	
 	public void setCurrentOp(String Op) {current_op = Op;}
@@ -63,13 +64,13 @@ public class DrawPanel extends JPanel{
 				if(current_op == "Wall")
 					Pixel_arr.get(pixel_x).get(pixel_y).setWall();
 				else if(current_op == "Start") {
-					if(start!= null && start.getType()=="Start")
+					if(start!= null && start.getType()==Types.Start)
 						start.setGround();
 					Pixel_arr.get(pixel_x).get(pixel_y).setStart();
 					start = Pixel_arr.get(pixel_x).get(pixel_y);
 				}
 				else if(current_op == "End") {
-					if(end!= null && end.getType()=="End")
+					if(end!= null && end.getType()==Types.End)
 						end.setGround();
 					Pixel_arr.get(pixel_x).get(pixel_y).setEnd();
 					end = Pixel_arr.get(pixel_x).get(pixel_y);
@@ -103,9 +104,13 @@ public class DrawPanel extends JPanel{
 		public void mouseMoved(MouseEvent e) {}
 		
 	}
+	
+	private boolean isBoardInvalid() {
+		return (start == null ||start.getType() != Types.Start || end ==null || end.getType() != Types.End);
+	}
 
 	public boolean solve() {
-		if(start == null ||start.getType() != "Start" || end ==null || end.getType() != "End") {
+		if(isBoardInvalid()) {
 			JOptionPane.showMessageDialog(null,"Couldn't find start and end");  
 			return false;
 		}
@@ -145,26 +150,26 @@ public class DrawPanel extends JPanel{
 					continue;
 				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
 					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
-					if(neighbor.getType() == "Ground" && neighbor.getSearchStatus() != "Closed") {
+					if(neighbor.getType() == Types.Ground && neighbor.getSearchStatus() != Status.Closed) {
 						if(p.getGcost()+distance(p, neighbor) < neighbor.getGcost()) { //Checks if we need to update costs
-							neighbor.setFather(p);                                     //setting the father
-							neighbor.setGcost(p.getGcost()+distance(p, neighbor));     //updating g_cost
-							neighbor.setFcost(neighbor.getGcost() + hCost(neighbor));  // updating f_cost
-							neighbor.setOpen();                                        // setting open
-							if(neighbor.getSearchStatus()== "Open")
+							neighbor.setFather(p);   //setting the father
+							neighbor.setGcost(p.getGcost()+distance(p, neighbor)); //updating g_cost
+							neighbor.setFcost(neighbor.getGcost() + hCost(neighbor)); // updating f_cost
+							neighbor.setOpen();  // setting open
+							if(neighbor.getSearchStatus()== Status.Open)
 								List.remove(neighbor);
 							List.addOrganize(neighbor);
 						}
 					}
-					else if(neighbor.getType() == "End") {
-						neighbor.setFather(p);                                     //setting the father
+					else if(neighbor.getType() == Types.End) {
+						neighbor.setFather(p); //setting the father
 						p.setClosed();
-						return true;
+						return true; //Found the end
 					}
 				}
 			}
 		p.setClosed(); //add to closed
-		return false;
+		return false; //Didn't find the end
 	}
 
 }

@@ -33,5 +33,9 @@ public class List {
 	public static boolean isEmpty(){
 		return (list.size() == 0);
 	}
+	
+	public static void clearList(){
+		list.clear();
+	}
 
 }
