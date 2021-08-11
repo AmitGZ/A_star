@@ -6,12 +6,11 @@ import java.lang.Math;
 
 public class DrawPanel extends JPanel{
 	
-	ArrayList<ArrayList<Pixel>> Pixel_arr;
-	Pixel start,end;
-	LinkedList<Pixel> open;
-	LinkedList<Pixel> closed;
-	final int panel_size, resolution, space_size;
-	String current_op;
+	private ArrayList<ArrayList<Pixel>> Pixel_arr;
+	private Pixel start,end;
+	private LinkedList<Pixel> open;
+	private final int panel_size, resolution, space_size;
+	private String current_op;
 	
 	DrawPanel(int panel_size, int resolution , int space_size ,String current_op){
 		setBackground(Color.black);
@@ -20,7 +19,6 @@ public class DrawPanel extends JPanel{
 		this.resolution =resolution;
 		this.space_size =space_size;
 		open = new LinkedList<Pixel>();
-		closed = new LinkedList<Pixel>();
 		
 		int Pixel_size = (space_size*(1-resolution)+panel_size)/resolution;
 		setLayout(null);
@@ -49,7 +47,6 @@ public class DrawPanel extends JPanel{
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) 
 				Pixel_arr.get(i).get(j).setGround();
-		System.out.println(Pixel_arr.get(0).get(0).getClosed());
 	}
 	
 	public void setCurrentOp(String Op) {
@@ -114,6 +111,9 @@ public class DrawPanel extends JPanel{
 			JOptionPane.showMessageDialog(null,"Couldn't find start and end");  
 			return;
 		}
+		start.setGcost(0);
+		start.setFcost(hCost(start));
+		calculateNear(start);
 	}
 
 	private double hCost(Pixel p){
@@ -123,30 +123,29 @@ public class DrawPanel extends JPanel{
 	private double distance(Pixel p1, Pixel p2) {
 		return Math.pow (Math.pow(p1.getX()- p2.getX(),2) + Math.pow(p1.getY()- p2.getY(),2) ,0.5);
 	}
-	/*
+	
 	public void calculateNear(Pixel p){
-		p.setClosed(); //add to closed
-		if(p.getParent() == null) // in case we're in the starting pixel 
-			p.setGcost(0);
-		
+		Pixel neighbor;
 		for(int dx = -1; dx <2 ; dx++)
 			for(int dy = -1 ; dy<2 ;dy++) {
 				if(dx == 0 && dy == 0 )
 					continue;
-				if(p.getX() +dx < panel_size && p.getY() + dy < panel_size && p.getX() + dx > 0 && p.getY() + dy > 0)
-					if(p.getType() == "Ground")
-					{
-						Pixel neighbor = Pixel_arr.get(p.getX() +dx).get(p.getY() +dy);
-						if(p.getGcost()+distance(p, neighbor) < neighbor.getGcost()) {
-							neighbor.setParent(p);
-							neighbor.setGcost(p.getGcost()+distance(p, neighbor)); //updating g_cost
-							neighbor.setFcost(neighbor.getGcost() + hCost(neighbor)); // updating f_cost
+				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
+					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
+					if(neighbor.getType() == "Ground" && !neighbor.getClosed()) {
+						if(p.getGcost()+distance(p, neighbor) < neighbor.getGcost()) { //Checks if we need to update costs
+							neighbor.setFather(p);                                     //setting the father
+							neighbor.setGcost(p.getGcost()+distance(p, neighbor));     //updating g_cost
+							neighbor.setFcost(neighbor.getGcost() + hCost(neighbor));  // updating f_cost
+							neighbor.setOpen();                                        // setting open
 						}
 						//add to open
 					}
-					else if(p.getType() == "End")
+					else if(neighbor.getType() == "End")
 						return;
+				}
 			}
+		p.setClosed(); //add to closed
 	}
-*/
+
 }

@@ -10,11 +10,10 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 
 public class MyFrame extends JFrame{
-	JPanel button_panel;
-	DrawPanel draw_panel;
+	private JPanel button_panel;
+	private DrawPanel draw_panel;
 	private final JComboBox<String> operation_box; // List of all available shapes 
-	JButton solve;
-	JButton reset;
+	private JButton solve,reset;
 	
 	private final static String[] operation_list = {"Wall", "Start" ,"End","Erase"};
 	final int screen_size=810, panel_size=719, resolution =10, space_size =1;
