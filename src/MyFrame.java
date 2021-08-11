@@ -16,7 +16,7 @@ public class MyFrame extends JFrame{
 	private JButton solve,reset;
 	
 	private final static String[] operation_list = {"Wall", "Start" ,"End","Erase"};
-	final int screen_size=810, panel_size=719, resolution =10, space_size =1;
+	final int screen_size=810, panel_size=719, resolution =40, space_size =1;
 	
 	MyFrame(){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

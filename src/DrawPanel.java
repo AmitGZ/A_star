@@ -8,7 +8,7 @@ public class DrawPanel extends JPanel{
 	
 	private ArrayList<ArrayList<Pixel>> Pixel_arr;
 	private Pixel start,end;
-	private LinkedList<Pixel> open;
+	private List open;
 	private final int panel_size, resolution, space_size;
 	private String current_op;
 	
@@ -18,7 +18,7 @@ public class DrawPanel extends JPanel{
 		this.panel_size= panel_size;
 		this.resolution =resolution;
 		this.space_size =space_size;
-		open = new LinkedList<Pixel>();
+		open = new List();
 		
 		int Pixel_size = (space_size*(1-resolution)+panel_size)/resolution;
 		setLayout(null);
@@ -49,9 +49,7 @@ public class DrawPanel extends JPanel{
 				Pixel_arr.get(i).get(j).setGround();
 	}
 	
-	public void setCurrentOp(String Op) {
-		current_op = Op;
-	}
+	public void setCurrentOp(String Op) {current_op = Op;}
 	
 	private class MouseHandler implements MouseMotionListener, MouseListener
 	{
@@ -106,25 +104,40 @@ public class DrawPanel extends JPanel{
 		
 	}
 
-	public void solve() {
+	public boolean solve() {
 		if(start == null ||start.getType() != "Start" || end ==null || end.getType() != "End") {
 			JOptionPane.showMessageDialog(null,"Couldn't find start and end");  
-			return;
+			return false;
 		}
 		start.setGcost(0);
 		start.setFcost(hCost(start));
-		calculateNear(start);
-	}
+		List.addOrganize(start);
+		while(!List.isEmpty())
+			if(calculateNear(List.pop())) {
+				traverseBack();
+				return true;
+			}
+		return false;
+	}		
 
-	private double hCost(Pixel p){
-		return Math.pow (Math.pow(p.getX()- end.getX(),2) + Math.pow(p.getY()- end.getY(),2) ,0.5);
+	private int hCost(Pixel p){
+		return (int)(Math.pow (Math.pow(p.getX()- end.getX(),2) + Math.pow(p.getY()- end.getY(),2) ,0.5));
 	}
 	
-	private double distance(Pixel p1, Pixel p2) {
-		return Math.pow (Math.pow(p1.getX()- p2.getX(),2) + Math.pow(p1.getY()- p2.getY(),2) ,0.5);
+	private int distance(Pixel p1, Pixel p2) {
+		return (int)(Math.pow (Math.pow(p1.getX()- p2.getX(),2) + Math.pow(p1.getY()- p2.getY(),2) ,0.5));
 	}
 	
-	public void calculateNear(Pixel p){
+	private void traverseBack() {
+		Pixel tmp=end;
+		while(tmp!=null) {
+			tmp.setPath();
+			tmp=tmp.getFather();
+		}
+		
+	}
+	
+	public boolean calculateNear(Pixel p){
 		Pixel neighbor;
 		for(int dx = -1; dx <2 ; dx++)
 			for(int dy = -1 ; dy<2 ;dy++) {
@@ -132,20 +145,26 @@ public class DrawPanel extends JPanel{
 					continue;
 				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
 					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
-					if(neighbor.getType() == "Ground" && !neighbor.getClosed()) {
+					if(neighbor.getType() == "Ground" && neighbor.getSearchStatus() != "Closed") {
 						if(p.getGcost()+distance(p, neighbor) < neighbor.getGcost()) { //Checks if we need to update costs
 							neighbor.setFather(p);                                     //setting the father
 							neighbor.setGcost(p.getGcost()+distance(p, neighbor));     //updating g_cost
 							neighbor.setFcost(neighbor.getGcost() + hCost(neighbor));  // updating f_cost
 							neighbor.setOpen();                                        // setting open
+							if(neighbor.getSearchStatus()== "Open")
+								List.remove(neighbor);
+							List.addOrganize(neighbor);
 						}
-						//add to open
 					}
-					else if(neighbor.getType() == "End")
-						return;
+					else if(neighbor.getType() == "End") {
+						neighbor.setFather(p);                                     //setting the father
+						p.setClosed();
+						return true;
+					}
 				}
 			}
 		p.setClosed(); //add to closed
+		return false;
 	}
 
 }
