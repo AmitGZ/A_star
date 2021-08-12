@@ -14,9 +14,9 @@ public class MyFrame extends JFrame{
 	private DrawPanel draw_panel;
 	private final JComboBox<String> operation_box; // List of all available shapes 
 	private JButton solve,reset;
-	
+	private JCheckBox real_time;
 	private final static String[] operation_list = {"Wall", "Start" ,"End","Erase"};
-	final int screen_size=810, panel_size=719, resolution =20, space_size =1;
+	final int screen_size=810, panel_size=719, resolution =10, space_size =1;
 	
 	MyFrame(){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -25,27 +25,28 @@ public class MyFrame extends JFrame{
 		setResizable(false);
 		setLocationRelativeTo(null);
 		
+		ButtonHandler button_handler = new ButtonHandler();
 		operationHandler op_handler = new operationHandler();
+		
 		operation_box= new JComboBox<String>(operation_list);
-		operation_box.setSelectedIndex(0);// Default option
 		operation_box.addItemListener(op_handler);
 		
-		button_panel = new JPanel();
+		real_time = new JCheckBox("Real Time");
+		real_time.addItemListener(op_handler);
+		
 		solve = new JButton("Solve");
 		reset = new JButton("Reset");
-		ButtonHandler button_handler = new ButtonHandler();
 		solve.addActionListener(button_handler);
 		reset.addActionListener(button_handler);
 		
-		
-		draw_panel = new DrawPanel(panel_size, resolution, space_size, operation_box.getItemAt(0));
-		draw_panel.setPreferredSize(new Dimension(panel_size,panel_size));
-		
+		button_panel = new JPanel();
 		button_panel.add(operation_box);
 		button_panel.add(solve);
 		button_panel.add(reset);
+		button_panel.add(real_time);
 
-		
+		draw_panel = new DrawPanel(panel_size, resolution, space_size, operation_box.getItemAt(0));
+		draw_panel.setPreferredSize(new Dimension(panel_size,panel_size));
 		add(button_panel);
 		add(draw_panel);
 
@@ -57,9 +58,12 @@ public class MyFrame extends JFrame{
 		public void actionPerformed(ActionEvent event)
 		{
 			if(event.getSource()==solve)
-				draw_panel.solve();
+				if(!draw_panel.isBoardValid()) //in case board is invalid
+					JOptionPane.showMessageDialog(null,"Couldn't find start and end");  
+				else
+					draw_panel.solve();        //solve board
 			else if(event.getSource() == reset)
-				draw_panel.reset();
+				draw_panel.resetTotal(); //total reset
 		}
 	}
 	
@@ -67,8 +71,12 @@ public class MyFrame extends JFrame{
 	{
 		public void itemStateChanged(ItemEvent event)
 		{
-			if (event.getSource() == operation_box && event.getStateChange() == event.SELECTED)
+			if (event.getSource() == operation_box && event.getStateChange() == event.SELECTED) // setting operation -  Wall Start End Erase
 				draw_panel.setCurrentOp(operation_box.getSelectedItem().toString());
+			else if(event.getSource() == real_time) {
+				draw_panel.setRealTime(real_time.isSelected()); // setting
+				solve.setEnabled(!real_time.isSelected());
+			}
 		}
 	}
 	
