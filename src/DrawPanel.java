@@ -98,6 +98,20 @@ public class DrawPanel extends JPanel{
 		
 	}
 
+	public void createMaze() {
+		int odd_res;
+		if(resolution%2==0)
+			odd_res=resolution-1;
+		else
+			odd_res=resolution;
+		
+		for(int i=0; i < odd_res; i++) 
+			for(int j=0; j < odd_res; j++) 
+				if(( i%2 ==0  && j%2 ==0) ||(j==0)||(i==0)||j==odd_res-1 ||i==odd_res-1)
+					Pixel_arr.get(i).get(j).setWall();
+		
+	}
+	
 	public void resetTotal() {
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) {

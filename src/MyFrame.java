@@ -13,7 +13,7 @@ public class MyFrame extends JFrame{
 	private JPanel button_panel;
 	private DrawPanel draw_panel;
 	private final JComboBox<String> operation_box; // List of all available shapes 
-	private JButton solve,reset;
+	private JButton solve,reset,create_maze;
 	private JCheckBox real_time;
 	private final static String[] operation_list = {"Wall", "Start" ,"End","Erase"};
 	final int screen_size=810, panel_size=719, resolution =10, space_size =1;
@@ -36,13 +36,16 @@ public class MyFrame extends JFrame{
 		
 		solve = new JButton("Solve");
 		reset = new JButton("Reset");
+		create_maze = new JButton("Create Maze");
 		solve.addActionListener(button_handler);
 		reset.addActionListener(button_handler);
+		create_maze.addActionListener(button_handler);
 		
 		button_panel = new JPanel();
 		button_panel.add(operation_box);
 		button_panel.add(solve);
 		button_panel.add(reset);
+		button_panel.add(create_maze);
 		button_panel.add(real_time);
 
 		draw_panel = new DrawPanel(panel_size, resolution, space_size, operation_box.getItemAt(0));
@@ -64,6 +67,8 @@ public class MyFrame extends JFrame{
 					draw_panel.solve();        //solve board
 			else if(event.getSource() == reset)
 				draw_panel.resetTotal(); //total reset
+			else if(event.getSource() == create_maze)
+				draw_panel.createMaze(); //create maze
 		}
 	}
 	
