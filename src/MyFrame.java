@@ -16,7 +16,7 @@ public class MyFrame extends JFrame{
 	private JButton solve,reset,create_maze;
 	private JCheckBox real_time;
 	private final static String[] operation_list = {"Wall", "Start" ,"End","Erase"};
-	final int screen_size=810, resolution =55, space_size =1;
+	final int screen_size=810, resolution =25, space_size =1;
 	int panel_size=710;
 	
 	MyFrame(){

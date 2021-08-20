@@ -73,8 +73,9 @@ public class DrawPanel extends JPanel{
 		//Creating all the walls, later to be removed by the maze creator
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) 
-				if(( i%2 ==0  || j%2 ==0)) 
+				if(( i%2 ==0  || j%2 ==0)) {
 					Pixel_arr.get(i).get(j).setWall();
+				}
 
 
 		//Creating the stack and helper variables
@@ -94,9 +95,20 @@ public class DrawPanel extends JPanel{
 				stack.push(current); //pushing the current to stack
 				//removing wall between current and neighbor
 				Pixel_arr.get((current.getXIndex() + neighbor.getXIndex()) /2).get((current.getYIndex() + neighbor.getYIndex()) /2).setGround();
+				delay(); //adding delay for maze creation for animation
 				neighbor.setVisited(true);// setting visited
 				stack.push(neighbor); //pushing neighbor to stack
 			}
+		}
+	}
+	
+	//FOR ANIMATION
+	private void delay() {
+		try {
+			TimeUnit.MILLISECONDS.sleep(100/resolution);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
