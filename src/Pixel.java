@@ -53,6 +53,7 @@ public class Pixel extends JLabel{
 	public void resetPixelData() {
 		search_status = Status.Blank;
 		g_cost = f_cost = Integer.MAX_VALUE;
+		isVisited =false;
 		setFather(null);
 		setText(null);
 	}

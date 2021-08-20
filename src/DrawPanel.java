@@ -59,11 +59,78 @@ public class DrawPanel extends JPanel{
 			}
 		return false;
 	}	
+	
+	public void createMaze() {		
+		resetTotal();
+		for(int i=0; i < resolution; i++) 
+			for(int j=0; j < resolution; j++) 
+				if(( i%2 ==0  || j%2 ==0))
+					Pixel_arr.get(i).get(j).setWall();
+		
+		
+		Stack<Pixel> stack = new Stack<Pixel>();
+		Pixel current, neighbor;
+		
+		current= Pixel_arr.get(1).get(1); //starting position top left
+		stack.push(current);
+		
+		while(!stack.isEmpty()) {
+			current = stack.pop();
+			current.setVisited(true);
+			neighbor= getNeighbor(current);
+			if(neighbor!=null) {
+				stack.push(current);
+				Pixel_arr.get((current.getXIndex() + neighbor.getXIndex()) /2).get((current.getYIndex() + neighbor.getYIndex()) /2).setGround();
+				neighbor.setVisited(true);
+				stack.push(neighbor);
+			}
+		}
+		
+		
+	}
+	
+	private Pixel getNeighbor(Pixel p) {
+		Pixel neighbor;
+		int[] arr = {0,1,2,3};
+		shuffleArray(arr);
+		int dx,dy;
+		for(int i = 0; i <4 ; i++)
+		{
+			if(arr[i]==0){
+				dx=0;dy=2;
+			}
+			else if(arr[i]==1){
+				dx=2;dy=0;
+			}
+			else if(arr[i]==2){
+				dx=0;dy=-2;
+			}
+			else {
+				dx=-2;dy=0;
+			}
+				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
+					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
+					if(!neighbor.getVisited())
+						return neighbor;
+				}
+			}
+		return null;
+	}
+	
+	private void shuffleArray(int[] arr) {
+		int tmp, j;
+	    for (int i = arr.length - 1; i > 0; i--) {
+	        j = (int) Math.floor(Math.random() * (i + 1));
+	        tmp = arr[i];
+	        arr[i] = arr[j];
+	        arr[j] = tmp;
+	    }
+	}
 
 	public boolean calculateNear(Pixel p){
 		Pixel neighbor;
-		for(int dx = -1; dx <2 ; dx++)
-			for(int dy = -1 ; dy<2 ;dy++) {
+		for(int dx = -1; dx <=1 ; dx++)
+			for(int dy = -1 ; dy<=1 ;dy++) {
 				if(dx == 0 && dy == 0 )
 					continue;
 				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
@@ -98,20 +165,6 @@ public class DrawPanel extends JPanel{
 		
 	}
 
-	public void createMaze() {
-		int odd_res;
-		if(resolution%2==0)
-			odd_res=resolution-1;
-		else
-			odd_res=resolution;
-		
-		for(int i=0; i < odd_res; i++) 
-			for(int j=0; j < odd_res; j++) 
-				if(( i%2 ==0  && j%2 ==0) ||(j==0)||(i==0)||j==odd_res-1 ||i==odd_res-1)
-					Pixel_arr.get(i).get(j).setWall();
-		
-	}
-	
 	public void resetTotal() {
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) {

@@ -16,7 +16,8 @@ public class MyFrame extends JFrame{
 	private JButton solve,reset,create_maze;
 	private JCheckBox real_time;
 	private final static String[] operation_list = {"Wall", "Start" ,"End","Erase"};
-	final int screen_size=810, panel_size=719, resolution =10, space_size =1;
+	final int screen_size=810, resolution =155, space_size =1;
+	int panel_size=710;
 	
 	MyFrame(){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -48,6 +49,9 @@ public class MyFrame extends JFrame{
 		button_panel.add(create_maze);
 		button_panel.add(real_time);
 
+		int Pixel_size = (space_size*(1-resolution)+panel_size)/resolution; //fixing the panel size, accounting for rounding errors
+		panel_size = (Pixel_size+space_size)*resolution-space_size;
+		
 		draw_panel = new DrawPanel(panel_size, resolution, space_size, operation_box.getItemAt(0));
 		draw_panel.setPreferredSize(new Dimension(panel_size,panel_size));
 		add(button_panel);
