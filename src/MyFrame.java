@@ -13,8 +13,8 @@ public class MyFrame extends JFrame{
 	private JPanel button_panel;
 	private DrawPanel draw_panel;
 	private final JComboBox<String> operation_box; // List of all available shapes 
-	private JButton solve,reset,create_maze;
-	private JCheckBox real_time;
+	private JButton reset,create_maze;
+	private JCheckBox auto_solve, animation;
 	private final static String[] operation_list = {"Wall", "Start" ,"End","Erase"};
 	final int screen_size=810, resolution =25, space_size =1;
 	int panel_size=710;
@@ -32,29 +32,31 @@ public class MyFrame extends JFrame{
 		operation_box= new JComboBox<String>(operation_list);
 		operation_box.addItemListener(op_handler);
 		
-		real_time = new JCheckBox("Real Time");
-		real_time.addItemListener(op_handler);
+		auto_solve = new JCheckBox("Automatic Solve");
+		animation = new JCheckBox("Animation");
+		auto_solve.setSelected(true);
+		animation.setSelected(true);
+		auto_solve.addItemListener(op_handler);
+		animation.addItemListener(op_handler);
 		
-		solve = new JButton("Solve");
 		reset = new JButton("Reset");
 		create_maze = new JButton("Create Maze");
-		solve.addActionListener(button_handler);
 		reset.addActionListener(button_handler);
 		create_maze.addActionListener(button_handler);
 		
 		button_panel = new JPanel();
 		button_panel.add(operation_box);
-		button_panel.add(solve);
 		button_panel.add(reset);
 		button_panel.add(create_maze);
-		button_panel.add(real_time);
+		button_panel.add(auto_solve);
+		button_panel.add(animation);
 
 		//Fixing the panel size, accounting for rounding errors
 		int Pixel_size = (space_size*(1-resolution)+panel_size)/resolution; 
 		panel_size = (Pixel_size+space_size)*resolution-space_size;
 		
 		//Defining and adding panels
-		draw_panel = new DrawPanel(panel_size, resolution, space_size, operation_box.getItemAt(0));
+		draw_panel = new DrawPanel(panel_size, resolution, space_size, operation_box.getItemAt(0),auto_solve.isSelected(), animation.isSelected());
 		draw_panel.setPreferredSize(new Dimension(panel_size,panel_size));
 		add(button_panel);
 		add(draw_panel);
@@ -66,12 +68,7 @@ public class MyFrame extends JFrame{
 	{
 		public void actionPerformed(ActionEvent event)
 		{
-			if(event.getSource()==solve)
-				if(!draw_panel.isBoardValid()) //in case board is invalid
-					JOptionPane.showMessageDialog(null,"Couldn't find start and end");  
-				else
-					draw_panel.solve();        //solve board
-			else if(event.getSource() == reset)
+			if(event.getSource() == reset)
 				draw_panel.resetTotal(); //total reset
 			else if(event.getSource() == create_maze)
 				draw_panel.createMaze(); //create maze
@@ -84,10 +81,13 @@ public class MyFrame extends JFrame{
 		{
 			if (event.getSource() == operation_box && event.getStateChange() == event.SELECTED) // setting operation -  Wall Start End Erase
 				draw_panel.setCurrentOp(operation_box.getSelectedItem().toString());
-			else if(event.getSource() == real_time) {
-				draw_panel.setRealTime(real_time.isSelected()); // setting
-				solve.setEnabled(!real_time.isSelected());
+			else if(event.getSource() == auto_solve) {
+				draw_panel.setRealTime(auto_solve.isSelected()); // setting real time update
+				if(draw_panel.isBoardValid() && auto_solve.isSelected()) // in case auto solve is turned on -> solve
+					draw_panel.solve();
 			}
+			else if(event.getSource() == animation) 
+				draw_panel.setAnimation(animation.isSelected()); // setting
 		}
 	}
 	

@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -13,9 +14,9 @@ public class DrawPanel extends JPanel{
 	private List open; // Linked list of open nodes sorted by f_cost
 	private final int panel_size, resolution, space_size; // Final resolution given by constructor
 	private String current_op; // Current operation
-	private boolean real_time; //variable connected to the real time-check box
+	private boolean auto_solve, animation; //variable connected to the real time-check box
 	
-	DrawPanel(int panel_size, int resolution , int space_size ,String current_op){
+	DrawPanel(int panel_size, int resolution , int space_size ,String current_op, boolean auto_solve,boolean animation){
 		setBackground(Color.black);
 		setLayout(null);
 		
@@ -23,6 +24,9 @@ public class DrawPanel extends JPanel{
 		this.panel_size= panel_size;
 		this.resolution =resolution;
 		this.space_size =space_size;
+		this.auto_solve =auto_solve;
+		this.animation =animation;
+
 		open = new List();
 		Pixel_arr = new ArrayList<>(resolution);
 		
@@ -39,6 +43,7 @@ public class DrawPanel extends JPanel{
 			{
 				Pixel_arr.get(i).add(new Pixel(i,j));
 				Pixel_arr.get(i).get(j).setBounds(i*(space_size+Pixel_size) , j*(space_size+Pixel_size) ,Pixel_size,Pixel_size);
+				Pixel_arr.get(i).get(j).setFont(new Font("Calibri", Font.BOLD, Pixel_size));
 				this.add(Pixel_arr.get(i).get(j));
 			}
 		
@@ -104,6 +109,8 @@ public class DrawPanel extends JPanel{
 	
 	//FOR ANIMATION
 	private void delay() {
+		if(animation == false)
+			return;
 		try {
 			TimeUnit.MILLISECONDS.sleep(100/resolution);
 		} catch (InterruptedException e) {
@@ -161,8 +168,8 @@ public class DrawPanel extends JPanel{
 		Pixel neighbor;
 		for(int dx = -1; dx <=1 ; dx++)
 			for(int dy = -1 ; dy<=1 ;dy++) {
-				//if(dx == 0 && dy == 0) use if to allow diagonal movement
-				if(!(dx == 0 ^ dy == 0))
+				//if(dx == 0 && dy == 0) //use if to allow diagonal movement
+				if(!(dx == 0 ^ dy == 0)) // use to forbid diagonal
 					continue;
 				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
 					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
@@ -175,6 +182,7 @@ public class DrawPanel extends JPanel{
 							if(neighbor.getSearchStatus()== Status.Open)
 								List.remove(neighbor);
 							List.addOrganize(neighbor);
+							delay();
 						}
 					}
 					else if(neighbor.getType() == Types.End) {
@@ -193,6 +201,7 @@ public class DrawPanel extends JPanel{
 		while(tmp!=null) {
 			tmp.setPath();
 			tmp=tmp.getFather();
+			delay();
 		}
 		
 	}
@@ -222,60 +231,67 @@ public class DrawPanel extends JPanel{
 	{
 		int Pixel_size = (space_size*(1-resolution)+panel_size)/resolution;
 		
-		@Override
-		public void mousePressed(MouseEvent e) {
+		private void mouseDraggedAndPressed(MouseEvent e) {
 			int pixel_x = e.getX()/(Pixel_size+space_size), pixel_y= e.getY()/(Pixel_size+space_size);
+			Pixel current;
+			boolean changed=false;
 			
 			//checking mouse is within panel
-			if(e.getX()<panel_size && e.getY()<panel_size && e.getX()>0 && e.getY() >0)
+			if(e.getX() < panel_size && e.getY() < panel_size && e.getX()>0 && e.getY() >0)
+			{
+				current = Pixel_arr.get(pixel_x).get(pixel_y);
 				//if Wall is selected
-				if(current_op == "Wall")
-					Pixel_arr.get(pixel_x).get(pixel_y).setWall();
-				//if Start is selected
-				else if(current_op == "Start") {
-					if(start!= null && start.getType()==Types.Start)
-						start.setGround();
-					Pixel_arr.get(pixel_x).get(pixel_y).setStart();
-					start = Pixel_arr.get(pixel_x).get(pixel_y);
-				}
-				//if End is selected
-				else if(current_op == "End") {
-					if(end!= null && end.getType()==Types.End)
-						end.setGround();
-					Pixel_arr.get(pixel_x).get(pixel_y).setEnd();
-					end = Pixel_arr.get(pixel_x).get(pixel_y);
+				if(current_op == "Wall") {
+					if(current.getType()!=Types.Wall)
+						changed=true;
+					current.setWall();
 				}
 				//if Erase is selected
 				else if(current_op == "Erase") {
-					Pixel_arr.get(pixel_x).get(pixel_y).setGround();
-					Pixel_arr.get(pixel_x).get(pixel_y).resetPixelData();
+					if(current.getType()!=Types.Ground)
+						changed=true;
+					current.setGround();
+					current.resetPixelData();
 				}
+				else if(Pixel_arr.get(pixel_x).get(pixel_y).getType() == Types.Ground)//only allow Start and End on Ground type
+				{
+					if(current_op == "Start") {
+						if(current.getType()!=Types.Start)
+							changed=true;
+						if(start!= null && start.getType()==Types.Start)
+							start.setGround();
+						current.setStart();
+						start = current;
+					}
+					//if End is selected
+					else if(current_op == "End") {
+						if(current.getType()!=Types.End)
+							changed=true;
+						if(end!= null && end.getType()==Types.End)
+							end.setGround();
+						current.setEnd();
+						end = current;
+					}
+				}
+				if(isBoardValid() && auto_solve && changed)
+					solve();
+			}
+		}
+		
+		@Override
+		public void mousePressed(MouseEvent e) {
+			mouseDraggedAndPressed(e);
 		}
 		
 		@Override
 		public void mouseDragged(MouseEvent e) {
-			int pixel_x = e.getX()/(Pixel_size+space_size), pixel_y= e.getY()/(Pixel_size+space_size);
-			
-			//checking mouse is within panel
-			if(e.getX()<panel_size && e.getY()<panel_size && e.getX()>0 && e.getY() >0)
-			{
-				//if Wall is selected
-				if(current_op == "Wall")
-					Pixel_arr.get(pixel_x).get(pixel_y).setWall();
-				//if Erase is selected
-				else if(current_op == "Erase") {
-					Pixel_arr.get(pixel_x).get(pixel_y).setGround();
-					Pixel_arr.get(pixel_x).get(pixel_y).resetPixelData();
-				}
-			}
+			mouseDraggedAndPressed(e);
 		}
 
 		@Override
 		public void mouseClicked(MouseEvent e) {}
 		@Override
 		public void mouseReleased(MouseEvent e) {
-			if(isBoardValid() && real_time)
-				solve();
 		}
 		@Override
 		public void mouseEntered(MouseEvent e) {}
@@ -302,7 +318,10 @@ public class DrawPanel extends JPanel{
 	}
 
 	//setting real time variable to control real time updates
-	public void setRealTime(boolean real_time) {this.real_time = real_time;}	
+	public void setRealTime(boolean auto_solve) {this.auto_solve = auto_solve;}
+	
+	//setting delay variable to control animation
+	public void setAnimation(boolean animation) {this.animation = animation;}	
 
 	//setting the current operation - wall,start,end,erase
 	public void setCurrentOp(String Op) {current_op = Op;}

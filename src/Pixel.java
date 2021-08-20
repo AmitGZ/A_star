@@ -32,6 +32,7 @@ public class Pixel extends JLabel{
 		
 	public void setGround() {
 		setBackground(Color.white);
+		setText(null);
 		update(this.getGraphics()); //FOR ANIMATION
 		type = Types.Ground;
 	}
@@ -45,26 +46,21 @@ public class Pixel extends JLabel{
 	public void setStart() {
 		setBackground(Color.green);
 		type = Types.Start;
+		setText("O");
+		update(this.getGraphics()); //FOR ANIMATION
 	}
 	
 	public void setEnd() {
 		setBackground(Color.blue);
 		type = Types.End;
+		setText("X");
+		update(this.getGraphics()); //FOR ANIMATION
+
 	}
 	
 	public void setPath() {
 		setBackground(Color.yellow);
 		update(this.getGraphics()); //FOR ANIMATION
-		delay();
-	}
-	
-	private void delay() {
-		try {
-			TimeUnit.MILLISECONDS.sleep(2);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 	//This method is used to reset the board data but keep the types
@@ -91,10 +87,10 @@ public class Pixel extends JLabel{
 
 	public void setBlank() {
 		search_status = Status.Blank;
-		//FOR ILLUSTRATION
 		if(type == Types.Ground)
 			setBackground(Color.white);
-		update(this.getGraphics()); //FOR ANIMATION
+		//FOR ANIMATION
+		update(this.getGraphics()); 
 	}
 	
 	public void setOpen() {
