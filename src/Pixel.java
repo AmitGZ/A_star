@@ -9,7 +9,7 @@ import java.awt.Graphics2D;
 
 enum Types {Ground, Wall, Start, End}
 
-enum Status{Blank, Open, Closed}
+enum Status{Blank, Open, Closed,Path}
 
 public class Pixel extends JLabel{
 	 private int x_index , y_index;
@@ -30,40 +30,46 @@ public class Pixel extends JLabel{
 		setOpaque(true);
 	}
 		
-	public void setGround() {
-		setBackground(Color.white);
-		setText(null);
-		update(this.getGraphics()); //FOR ANIMATION
-		type = Types.Ground;
-	}
-	
-	public void setWall() {
-		setBackground(Color.black);
-		update(this.getGraphics()); //FOR ANIMATION
-		type = Types.Wall;
-	}
-	
-	public void setStart() {
-		setBackground(Color.green);
-		type = Types.Start;
-		setText("O");
-		update(this.getGraphics()); //FOR ANIMATION
-	}
-	
-	public void setEnd() {
-		setBackground(Color.blue);
-		type = Types.End;
-		setText("X");
-		update(this.getGraphics()); //FOR ANIMATION
-
-	}
-	
-	public void setPath() {
-		setBackground(Color.yellow);
+	public void setType(Types type) {
+		if(type==Types.Start) { 
+			setBackground(Color.green);
+			setText("o");
+		}
+		else if(type ==Types.End) {
+			setBackground(Color.blue);
+			setText("x");
+		}
+		else if(type ==Types.Wall) 
+			setBackground(Color.black);
+		else { //Ground
+			setBackground(Color.white);
+			setText(null);
+		}
+		this.type=type;
 		update(this.getGraphics()); //FOR ANIMATION
 	}
 	
-	//This method is used to reset the board data but keep the types
+	public void setStatus(Status stat){
+		if(stat==Status.Blank) {
+			if(type == Types.Ground)
+				setBackground(Color.white);
+		}
+		else if(stat==Status.Open) {
+			if(type == Types.Ground)
+				setBackground(Color.green);
+			}
+		else if(stat==Status.Closed) {
+			if(type == Types.Ground)// (&& Closed)
+				setBackground(Color.red);
+		}
+		else //status == Path
+			setBackground(Color.yellow);
+		
+		search_status=stat;
+		update(this.getGraphics());  //FOR ANIMATION
+	}
+	
+	 //This method is used to reset the board data but keep the types  
 	public void resetPixelData() {
 		search_status = Status.Blank;
 		g_cost = f_cost = Integer.MAX_VALUE;
@@ -71,6 +77,8 @@ public class Pixel extends JLabel{
 		setFather(null);
 	}
 	
+	
+	// Getters and Setters
 	public int getXIndex() {return x_index;}
 
 	public int getYIndex() {return y_index;}
@@ -85,30 +93,6 @@ public class Pixel extends JLabel{
 	
 	public int getGCost() {return g_cost;}
 
-	public void setBlank() {
-		search_status = Status.Blank;
-		if(type == Types.Ground)
-			setBackground(Color.white);
-		//FOR ANIMATION
-		update(this.getGraphics()); 
-	}
-	
-	public void setOpen() {
-		search_status = Status.Open;
-		//FOR ILLUSTRATION
-		if(type == Types.Ground)
-			setBackground(Color.green);
-		update(this.getGraphics()); //FOR ANIMATION
-	}
-	
-	public void setClosed() {
-		search_status = Status.Closed;
-		//FOR ILLUSTRATION
-		if(type == Types.Ground)
-			setBackground(Color.red);
-		update(this.getGraphics()); //FOR ANIMATION
-	}
-	
 	public Status getSearchStatus() {return search_status;}
 
 	public void setFather(Pixel p) {Father = p;}

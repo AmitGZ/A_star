@@ -79,7 +79,7 @@ public class DrawPanel extends JPanel{
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) 
 				if(( i%2 ==0  || j%2 ==0)) {
-					Pixel_arr.get(i).get(j).setWall();
+					Pixel_arr.get(i).get(j).setType(Types.Wall);
 				}
 
 
@@ -99,7 +99,7 @@ public class DrawPanel extends JPanel{
 			if(neighbor!=null) { //if no neighbors left get from stack,
 				stack.push(current); //pushing the current to stack
 				//removing wall between current and neighbor
-				Pixel_arr.get((current.getXIndex() + neighbor.getXIndex()) /2).get((current.getYIndex() + neighbor.getYIndex()) /2).setGround();
+				Pixel_arr.get((current.getXIndex() + neighbor.getXIndex()) /2).get((current.getYIndex() + neighbor.getYIndex()) /2).setType(Types.Ground);
 				delay(); //adding delay for maze creation for animation
 				neighbor.setVisited(true);// setting visited
 				stack.push(neighbor); //pushing neighbor to stack
@@ -178,7 +178,7 @@ public class DrawPanel extends JPanel{
 							neighbor.setFather(p);   //setting the father
 							neighbor.setGCost(p.getGCost()+distance(p, neighbor)); //updating g_cost
 							neighbor.setFCost(neighbor.getGCost() + hCost(neighbor)); // updating f_cost
-							neighbor.setOpen();  // setting open
+							neighbor.setStatus(Status.Open);  // setting open
 							if(neighbor.getSearchStatus()== Status.Open)
 								List.remove(neighbor);
 							List.addOrganize(neighbor);
@@ -191,7 +191,7 @@ public class DrawPanel extends JPanel{
 					}
 				}
 			}
-		p.setClosed(); //add to closed
+		p.setStatus(Status.Closed); //add to closed
 		return false; //Didn't find the end
 	}
 	
@@ -199,7 +199,7 @@ public class DrawPanel extends JPanel{
 	private void traverseBack() {
 		Pixel tmp=end;
 		while(tmp!=null) {
-			tmp.setPath();
+			tmp.setStatus(Status.Path);
 			tmp=tmp.getFather();
 			delay();
 		}
@@ -211,7 +211,7 @@ public class DrawPanel extends JPanel{
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) {
 				Pixel_arr.get(i).get(j).resetPixelData();
-				Pixel_arr.get(i).get(j).setGround();
+				Pixel_arr.get(i).get(j).setType(Types.Ground);
 			}
 		open.clearList();
 	}
@@ -221,7 +221,7 @@ public class DrawPanel extends JPanel{
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) {
 				if(Pixel_arr.get(i).get(j).getSearchStatus() != Status.Blank)
-					Pixel_arr.get(i).get(j).setBlank();
+					Pixel_arr.get(i).get(j).setStatus(Status.Blank);
 				Pixel_arr.get(i).get(j).resetPixelData();
 			}
 		open.clearList(); //clearing the "open" A-star list
@@ -244,13 +244,13 @@ public class DrawPanel extends JPanel{
 				if(current_op == "Wall") {
 					if(current.getType()!=Types.Wall)
 						changed=true;
-					current.setWall();
+					current.setType(Types.Wall);
 				}
 				//if Erase is selected
 				else if(current_op == "Erase") {
 					if(current.getType()!=Types.Ground)
 						changed=true;
-					current.setGround();
+					current.setType(Types.Ground);
 					current.resetPixelData();
 				}
 				else if(Pixel_arr.get(pixel_x).get(pixel_y).getType() == Types.Ground)//only allow Start and End on Ground type
@@ -259,8 +259,8 @@ public class DrawPanel extends JPanel{
 						if(current.getType()!=Types.Start)
 							changed=true;
 						if(start!= null && start.getType()==Types.Start)
-							start.setGround();
-						current.setStart();
+							start.setType(Types.Ground);
+						current.setType(Types.Start);
 						start = current;
 					}
 					//if End is selected
@@ -268,8 +268,8 @@ public class DrawPanel extends JPanel{
 						if(current.getType()!=Types.End)
 							changed=true;
 						if(end!= null && end.getType()==Types.End)
-							end.setGround();
-						current.setEnd();
+							end.setType(Types.Ground);
+						current.setType(Types.End);
 						end = current;
 					}
 				}
