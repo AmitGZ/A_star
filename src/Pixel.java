@@ -1,6 +1,11 @@
 import java.awt.event.*;
+import java.util.concurrent.TimeUnit;
+
 import javax.swing.*;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 enum Types {Ground, Wall, Start, End}
 
@@ -27,11 +32,13 @@ public class Pixel extends JLabel{
 		
 	public void setGround() {
 		setBackground(Color.white);
+		update(this.getGraphics()); //FOR ANIMATION
 		type = Types.Ground;
 	}
 	
 	public void setWall() {
 		setBackground(Color.black);
+		update(this.getGraphics()); //FOR ANIMATION
 		type = Types.Wall;
 	}
 	
@@ -47,6 +54,17 @@ public class Pixel extends JLabel{
 	
 	public void setPath() {
 		setBackground(Color.yellow);
+		update(this.getGraphics()); //FOR ANIMATION
+		delay();
+	}
+	
+	private void delay() {
+		try {
+			TimeUnit.MILLISECONDS.sleep(2);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	//This method is used to reset the board data but keep the types
@@ -55,7 +73,6 @@ public class Pixel extends JLabel{
 		g_cost = f_cost = Integer.MAX_VALUE;
 		isVisited =false;
 		setFather(null);
-		setText(null);
 	}
 	
 	public int getXIndex() {return x_index;}
@@ -77,6 +94,7 @@ public class Pixel extends JLabel{
 		//FOR ILLUSTRATION
 		if(type == Types.Ground)
 			setBackground(Color.white);
+		update(this.getGraphics()); //FOR ANIMATION
 	}
 	
 	public void setOpen() {
@@ -84,7 +102,7 @@ public class Pixel extends JLabel{
 		//FOR ILLUSTRATION
 		if(type == Types.Ground)
 			setBackground(Color.green);
-		setText(Integer.toString(f_cost));
+		update(this.getGraphics()); //FOR ANIMATION
 	}
 	
 	public void setClosed() {
@@ -92,7 +110,7 @@ public class Pixel extends JLabel{
 		//FOR ILLUSTRATION
 		if(type == Types.Ground)
 			setBackground(Color.red);
-		setText(Integer.toString(f_cost));
+		update(this.getGraphics()); //FOR ANIMATION
 	}
 	
 	public Status getSearchStatus() {return search_status;}
@@ -104,4 +122,5 @@ public class Pixel extends JLabel{
 	public void setVisited(boolean isVisited) {this.isVisited=isVisited;}
 	
 	public boolean getVisited() {return isVisited;}
+	
 }

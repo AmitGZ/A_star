@@ -1,6 +1,8 @@
 import java.awt.Color;
 import java.awt.event.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+
 import javax.swing.*;
 import java.lang.Math; 
 
@@ -48,65 +50,79 @@ public class DrawPanel extends JPanel{
 		setVisible(true);
 	}
 	
+	//this method uses the A star algorithm to find the shortest path between start and end
 	public boolean solve() {
+		resetData(); // resetting any previous data
+		//setting start cost
 		start.setGCost(0);
 		start.setFCost(hCost(start));
+		//adding to the organized list the starting point
 		List.addOrganize(start);
+		//while the list isn't empty keep exploring nodes,
 		while(!List.isEmpty())
-			if(calculateNear(List.pop())) {
-				traverseBack();
-				return true;
+			if(calculateNear(List.pop())) {// if caluclateNear returns true -> reached the end
+				traverseBack(); //reached the end traverse back the path we came
+				return true; //return true to indicate we found a path
 			}
-		return false;
+		return false;//return true to indicate we didn't find a path
 	}	
 	
 	public void createMaze() {		
-		resetTotal();
+		//Resetting the board
+		resetTotal(); 
+		//Creating all the walls, later to be removed by the maze creator
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) 
-				if(( i%2 ==0  || j%2 ==0))
+				if(( i%2 ==0  || j%2 ==0)) 
 					Pixel_arr.get(i).get(j).setWall();
-		
-		
+
+
+		//Creating the stack and helper variables
 		Stack<Pixel> stack = new Stack<Pixel>();
 		Pixel current, neighbor;
 		
-		current= Pixel_arr.get(1).get(1); //starting position top left
+		//Setting the starting position at top left
+		current= Pixel_arr.get(1).get(1);
 		stack.push(current);
 		
-		while(!stack.isEmpty()) {
-			current = stack.pop();
-			current.setVisited(true);
-			neighbor= getNeighbor(current);
-			if(neighbor!=null) {
-				stack.push(current);
+		//Maze generating algorithm
+		while(!stack.isEmpty()) {//if stack is empty -finish
+			current = stack.pop(); //setting the current node to the node from the stack
+			current.setVisited(true);// setting as visited
+			neighbor= getNeighbor(current); //getting a neighbor
+			if(neighbor!=null) { //if no neighbors left get from stack,
+				stack.push(current); //pushing the current to stack
+				//removing wall between current and neighbor
 				Pixel_arr.get((current.getXIndex() + neighbor.getXIndex()) /2).get((current.getYIndex() + neighbor.getYIndex()) /2).setGround();
-				neighbor.setVisited(true);
-				stack.push(neighbor);
+				neighbor.setVisited(true);// setting visited
+				stack.push(neighbor); //pushing neighbor to stack
 			}
 		}
-		
-		
 	}
 	
+	//This method is used by "createMaze" to get a random and viable neighbor
 	private Pixel getNeighbor(Pixel p) {
 		Pixel neighbor;
 		int[] arr = {0,1,2,3};
-		shuffleArray(arr);
+		shuffleArray(arr); //shuffling the array
 		int dx,dy;
 		for(int i = 0; i <4 ; i++)
 		{
-			if(arr[i]==0){
-				dx=0;dy=2;
+			if(arr[i]==0){//right
+				dx=0;
+				dy=2;
 			}
-			else if(arr[i]==1){
-				dx=2;dy=0;
+			else if(arr[i]==1){//bottom
+				dx=2;
+				dy=0;
 			}
-			else if(arr[i]==2){
-				dx=0;dy=-2;
+			else if(arr[i]==2){//left
+				dx=-2;
+				dy=0;
 			}
-			else {
-				dx=-2;dy=0;
+			else {//top
+				dx=0;
+				dy=-2;
 			}
 				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
 					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
@@ -117,6 +133,7 @@ public class DrawPanel extends JPanel{
 		return null;
 	}
 	
+	//This function is used by getNeighbor to get a random neighbor
 	private void shuffleArray(int[] arr) {
 		int tmp, j;
 	    for (int i = arr.length - 1; i > 0; i--) {
@@ -127,11 +144,13 @@ public class DrawPanel extends JPanel{
 	    }
 	}
 
+	//This function is used for the A star algorithm to calculate all the near pixels and choose which path to take
 	public boolean calculateNear(Pixel p){
 		Pixel neighbor;
 		for(int dx = -1; dx <=1 ; dx++)
 			for(int dy = -1 ; dy<=1 ;dy++) {
-				if(dx == 0 && dy == 0 )
+				//if(dx == 0 && dy == 0) use if to allow diagonal movement
+				if(!(dx == 0 ^ dy == 0))
 					continue;
 				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
 					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
@@ -156,6 +175,7 @@ public class DrawPanel extends JPanel{
 		return false; //Didn't find the end
 	}
 	
+	//This function traverses back the path once we found the end point
 	private void traverseBack() {
 		Pixel tmp=end;
 		while(tmp!=null) {
@@ -165,6 +185,7 @@ public class DrawPanel extends JPanel{
 		
 	}
 
+	//This function clears all the pixels' data
 	public void resetTotal() {
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) {
@@ -174,6 +195,7 @@ public class DrawPanel extends JPanel{
 		open.clearList();
 	}
 	
+	//This function clears all the pixels' data except for their type
 	public void resetData() {
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) {
@@ -181,7 +203,7 @@ public class DrawPanel extends JPanel{
 					Pixel_arr.get(i).get(j).setBlank();
 				Pixel_arr.get(i).get(j).resetPixelData();
 			}
-		open.clearList();
+		open.clearList(); //clearing the "open" A-star list
 	}
 	
 	private class MouseHandler implements MouseMotionListener, MouseListener
@@ -240,10 +262,8 @@ public class DrawPanel extends JPanel{
 		public void mouseClicked(MouseEvent e) {}
 		@Override
 		public void mouseReleased(MouseEvent e) {
-			if(isBoardValid() && real_time) {
-				resetData();
+			if(isBoardValid() && real_time)
 				solve();
-			}
 		}
 		@Override
 		public void mouseEntered(MouseEvent e) {}
@@ -254,11 +274,12 @@ public class DrawPanel extends JPanel{
 		
 	}
 	
+	//checks if there is a start and an end and returns true or false
 	public boolean isBoardValid() {
 		return (start != null && start.getType() == Types.Start && end != null && end.getType() == Types.End);
 	}
 	
-	//@param p1,p2  This method calculates distance between two pixels
+	//@param p1,p2  This method calculates distance between two pixels with Pythagoras
 	private int distance(Pixel p1, Pixel p2) {
 		return (int)(Math.pow (Math.pow(p1.getX()- p2.getX(),2) + Math.pow(p1.getY()- p2.getY(),2) ,0.5));
 	}
@@ -268,7 +289,9 @@ public class DrawPanel extends JPanel{
 		return distance(p,end);
 	}
 
+	//setting real time variable to control real time updates
 	public void setRealTime(boolean real_time) {this.real_time = real_time;}	
 
+	//setting the current operation - wall,start,end,erase
 	public void setCurrentOp(String Op) {current_op = Op;}
 }
