@@ -66,7 +66,7 @@ public class Pixel extends JLabel{
 			setBackground(Color.yellow);
 		
 		search_status=stat;
-		update(this.getGraphics());  //FOR ANIMATION
+		update(this.getGraphics()); //FOR ANIMATION
 	}
 	
 	 //This method is used to reset the board data but keep the types  

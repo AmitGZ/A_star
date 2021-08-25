@@ -14,9 +14,9 @@ public class DrawPanel extends JPanel{
 	private List open; // Linked list of open nodes sorted by f_cost
 	private final int panel_size, resolution, space_size; // Final resolution given by constructor
 	private String current_op; // Current operation
-	private boolean auto_solve, animation; //variable connected to the real time-check box
+	Thread second_thread;
 	
-	DrawPanel(int panel_size, int resolution , int space_size ,String current_op, boolean auto_solve,boolean animation){
+	DrawPanel(int panel_size, int resolution , int space_size ,String current_op){
 		setBackground(Color.black);
 		setLayout(null);
 		
@@ -24,8 +24,6 @@ public class DrawPanel extends JPanel{
 		this.panel_size= panel_size;
 		this.resolution =resolution;
 		this.space_size =space_size;
-		this.auto_solve =auto_solve;
-		this.animation =animation;
 
 		open = new List();
 		Pixel_arr = new ArrayList<>(resolution);
@@ -55,6 +53,85 @@ public class DrawPanel extends JPanel{
 		setVisible(true);
 	}
 	
+	private class MouseHandler extends MouseAdapter
+	{
+		int Pixel_size = (space_size*(1-resolution)+panel_size)/resolution;
+		
+		private void mouseDraggedAndPressed(MouseEvent e) {
+			int pixel_x = e.getX()/(Pixel_size+space_size), pixel_y= e.getY()/(Pixel_size+space_size);
+			Pixel current;
+			boolean changed=false;
+			
+			//checking mouse is within panel
+			if(e.getX() < panel_size && e.getY() < panel_size && e.getX()>0 && e.getY() >0)
+			{
+				current = Pixel_arr.get(pixel_x).get(pixel_y);
+				//if Wall is selected
+				if(current_op == "Wall") {
+					if(current.getType()!=Types.Wall)
+						changed=true;
+					current.setType(Types.Wall);
+				}
+				//if Erase is selected
+				else if(current_op == "Erase") {
+					if(current.getType()!=Types.Ground)
+						changed=true;
+					current.setType(Types.Ground);
+					current.resetPixelData();
+				}
+				else if(Pixel_arr.get(pixel_x).get(pixel_y).getType() == Types.Ground)//only allow Start and End on Ground type
+				{
+					if(current_op == "Start") {
+						if(current.getType()!=Types.Start)
+							changed=true;
+						if(start!= null && start.getType()==Types.Start)
+							start.setType(Types.Ground);
+						current.setType(Types.Start);
+						start = current;
+					}
+					//if End is selected
+					else if(current_op == "End") {
+						if(current.getType()!=Types.End)
+							changed=true;
+						if(end!= null && end.getType()==Types.End)
+							end.setType(Types.Ground);
+						current.setType(Types.End);
+						end = current;
+					}
+				}
+				if(isBoardValid() && changed) {
+					interruptAndWait();
+			        second_thread = new Thread(new Runnable() {
+						public void run(){ 
+								solve();
+							}});
+			        second_thread.start();
+				}
+			}
+		}
+		
+		@Override
+		public void mousePressed(MouseEvent e) {
+			mouseDraggedAndPressed(e);
+		}
+		
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			mouseDraggedAndPressed(e);
+		}
+	}
+	
+	public void interruptAndWait() {
+		if(second_thread!=null) {
+			second_thread.interrupt();
+			try {
+				second_thread.join();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+		}
+	}
+	
 	//this method uses the A star algorithm to find the shortest path between start and end
 	public boolean solve() {
 		resetData(); // resetting any previous data
@@ -64,59 +141,58 @@ public class DrawPanel extends JPanel{
 		//adding to the organized list the starting point
 		List.addOrganize(start);
 		//while the list isn't empty keep exploring nodes,
-		while(!List.isEmpty())
-			if(calculateNear(List.pop())) {// if caluclateNear returns true -> reached the end
+		while(!Thread.currentThread().isInterrupted() && !List.isEmpty())
+			if(!Thread.currentThread().isInterrupted() && calculateNear(List.pop())) {// if caluclateNear returns true -> reached the end
 				traverseBack(); //reached the end traverse back the path we came
 				return true; //return true to indicate we found a path
 			}
 		return false;//return true to indicate we didn't find a path
 	}	
 	
-	public void createMaze() {		
-		//Resetting the board
-		resetTotal(); 
-		//Creating all the walls, later to be removed by the maze creator
-		for(int i=0; i < resolution; i++) 
-			for(int j=0; j < resolution; j++) 
-				if(( i%2 ==0  || j%2 ==0)) {
-					Pixel_arr.get(i).get(j).setType(Types.Wall);
-				}
+	//This function traverses back the path once we found the end point
+	private void traverseBack() {
 
-
-		//Creating the stack and helper variables
-		Stack<Pixel> stack = new Stack<Pixel>();
-		Pixel current, neighbor;
-		
-		//Setting the starting position at top left
-		current= Pixel_arr.get(1).get(1);
-		stack.push(current);
-		
-		//Maze generating algorithm
-		while(!stack.isEmpty()) {//if stack is empty -finish
-			current = stack.pop(); //setting the current node to the node from the stack
-			current.setVisited(true);// setting as visited
-			neighbor= getNeighbor(current); //getting a neighbor
-			if(neighbor!=null) { //if no neighbors left get from stack,
-				stack.push(current); //pushing the current to stack
-				//removing wall between current and neighbor
-				Pixel_arr.get((current.getXIndex() + neighbor.getXIndex()) /2).get((current.getYIndex() + neighbor.getYIndex()) /2).setType(Types.Ground);
-				delay(); //adding delay for maze creation for animation
-				neighbor.setVisited(true);// setting visited
-				stack.push(neighbor); //pushing neighbor to stack
-			}
+		Pixel tmp=end;
+		while(tmp!=null) {
+			tmp.setStatus(Status.Path);
+			tmp=tmp.getFather();
+			delay();
 		}
+		
 	}
-	
-	//FOR ANIMATION
-	private void delay() {
-		if(animation == false)
-			return;
-		try {
-			TimeUnit.MILLISECONDS.sleep(100/resolution);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+	//This function is used for the A star algorithm to calculate all the near pixels and choose which path to take
+	public boolean calculateNear(Pixel p){
+		if(p==null)
+			return false;
+		Pixel neighbor;
+		for(int dx = -1; dx <=1 ; dx++)
+			for(int dy = -1 ; dy<=1 ;dy++) {
+				//if(dx == 0 && dy == 0) //use if to allow diagonal movement
+				if(!(dx == 0 ^ dy == 0)) // use to forbid diagonal
+					continue;
+				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
+					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
+					if(neighbor.getType() == Types.Ground && neighbor.getSearchStatus() != Status.Closed) {
+						if(p.getGCost()+distance(p, neighbor) < neighbor.getGCost()) { //Checks if we need to update costs
+							neighbor.setFather(p);   //setting the father
+							neighbor.setGCost(p.getGCost()+distance(p, neighbor)); //updating g_cost
+							neighbor.setFCost(neighbor.getGCost() + hCost(neighbor)); // updating f_cost
+							neighbor.setStatus(Status.Open);  // setting open
+							if(neighbor.getSearchStatus()== Status.Open)
+								List.remove(neighbor);
+							List.addOrganize(neighbor);
+							delay();
+						}
+					}
+					else if(neighbor.getType() == Types.End) {
+						neighbor.setFather(p); //setting the father
+						return true; //Found the end
+					}
+				}
+			}
+		p.setStatus(Status.Closed); //add to closed
+		return false; //Didn't find the end
 	}
 	
 	//This method is used by "createMaze" to get a random and viable neighbor
@@ -163,51 +239,43 @@ public class DrawPanel extends JPanel{
 	    }
 	}
 
-	//This function is used for the A star algorithm to calculate all the near pixels and choose which path to take
-	public boolean calculateNear(Pixel p){
-		Pixel neighbor;
-		for(int dx = -1; dx <=1 ; dx++)
-			for(int dy = -1 ; dy<=1 ;dy++) {
-				//if(dx == 0 && dy == 0) //use if to allow diagonal movement
-				if(!(dx == 0 ^ dy == 0)) // use to forbid diagonal
-					continue;
-				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
-					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
-					if(neighbor.getType() == Types.Ground && neighbor.getSearchStatus() != Status.Closed) {
-						if(p.getGCost()+distance(p, neighbor) < neighbor.getGCost()) { //Checks if we need to update costs
-							neighbor.setFather(p);   //setting the father
-							neighbor.setGCost(p.getGCost()+distance(p, neighbor)); //updating g_cost
-							neighbor.setFCost(neighbor.getGCost() + hCost(neighbor)); // updating f_cost
-							neighbor.setStatus(Status.Open);  // setting open
-							if(neighbor.getSearchStatus()== Status.Open)
-								List.remove(neighbor);
-							List.addOrganize(neighbor);
-							delay();
-						}
-					}
-					else if(neighbor.getType() == Types.End) {
-						neighbor.setFather(p); //setting the father
-						return true; //Found the end
-					}
+	public void createMaze() {		
+		//Resetting the board
+		resetTotal(); 
+		//Creating all the walls, later to be removed by the maze creator
+		for(int i=0; i < resolution; i++) 
+			for(int j=0; j < resolution; j++) 
+				if(( i%2 ==0  || j%2 ==0)) {
+					Pixel_arr.get(i).get(j).setType(Types.Wall);
 				}
+
+
+		//Creating the stack and helper variables
+		Stack<Pixel> stack = new Stack<Pixel>();
+		Pixel current, neighbor;
+		
+		//Setting the starting position at top left
+		current= Pixel_arr.get(1).get(1);
+		stack.push(current);
+		
+		//Maze generating algorithm
+		while(!stack.isEmpty()) {//if stack is empty -finish
+			current = stack.pop(); //setting the current node to the node from the stack
+			current.setVisited(true);// setting as visited
+			neighbor= getNeighbor(current); //getting a neighbor
+			if(neighbor!=null) { //if no neighbors left get from stack,
+				stack.push(current); //pushing the current to stack
+				//removing wall between current and neighbor
+				Pixel_arr.get((current.getXIndex() + neighbor.getXIndex()) /2).get((current.getYIndex() + neighbor.getYIndex()) /2).setType(Types.Ground);
+				delay(); //adding delay for maze creation for animation
+				neighbor.setVisited(true);// setting visited
+				stack.push(neighbor); //pushing neighbor to stack
 			}
-		p.setStatus(Status.Closed); //add to closed
-		return false; //Didn't find the end
+		}
 	}
 	
-	//This function traverses back the path once we found the end point
-	private void traverseBack() {
-		Pixel tmp=end;
-		while(tmp!=null) {
-			tmp.setStatus(Status.Path);
-			tmp=tmp.getFather();
-			delay();
-		}
-		
-	}
-
 	//This function clears all the pixels' data
-	public void resetTotal() {
+	public void resetTotal() {   
 		for(int i=0; i < resolution; i++) 
 			for(int j=0; j < resolution; j++) {
 				Pixel_arr.get(i).get(j).resetPixelData();
@@ -227,81 +295,15 @@ public class DrawPanel extends JPanel{
 		open.clearList(); //clearing the "open" A-star list
 	}
 	
-	private class MouseHandler implements MouseMotionListener, MouseListener
-	{
-		int Pixel_size = (space_size*(1-resolution)+panel_size)/resolution;
-		
-		private void mouseDraggedAndPressed(MouseEvent e) {
-			int pixel_x = e.getX()/(Pixel_size+space_size), pixel_y= e.getY()/(Pixel_size+space_size);
-			Pixel current;
-			boolean changed=false;
-			
-			//checking mouse is within panel
-			if(e.getX() < panel_size && e.getY() < panel_size && e.getX()>0 && e.getY() >0)
-			{
-				current = Pixel_arr.get(pixel_x).get(pixel_y);
-				//if Wall is selected
-				if(current_op == "Wall") {
-					if(current.getType()!=Types.Wall)
-						changed=true;
-					current.setType(Types.Wall);
-				}
-				//if Erase is selected
-				else if(current_op == "Erase") {
-					if(current.getType()!=Types.Ground)
-						changed=true;
-					current.setType(Types.Ground);
-					current.resetPixelData();
-				}
-				else if(Pixel_arr.get(pixel_x).get(pixel_y).getType() == Types.Ground)//only allow Start and End on Ground type
-				{
-					if(current_op == "Start") {
-						if(current.getType()!=Types.Start)
-							changed=true;
-						if(start!= null && start.getType()==Types.Start)
-							start.setType(Types.Ground);
-						current.setType(Types.Start);
-						start = current;
-					}
-					//if End is selected
-					else if(current_op == "End") {
-						if(current.getType()!=Types.End)
-							changed=true;
-						if(end!= null && end.getType()==Types.End)
-							end.setType(Types.Ground);
-						current.setType(Types.End);
-						end = current;
-					}
-				}
-				if(isBoardValid() && auto_solve && changed)
-					solve();
-			}
+	//FOR ANIMATION
+	private void delay() {
+		try {
+			TimeUnit.MICROSECONDS.sleep(80000/resolution);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 		}
-		
-		@Override
-		public void mousePressed(MouseEvent e) {
-			mouseDraggedAndPressed(e);
-		}
-		
-		@Override
-		public void mouseDragged(MouseEvent e) {
-			mouseDraggedAndPressed(e);
-		}
-
-		@Override
-		public void mouseClicked(MouseEvent e) {}
-		@Override
-		public void mouseReleased(MouseEvent e) {
-		}
-		@Override
-		public void mouseEntered(MouseEvent e) {}
-		@Override
-		public void mouseExited(MouseEvent e) {}
-		@Override
-		public void mouseMoved(MouseEvent e) {}
-		
 	}
-	
+
 	//checks if there is a start and an end and returns true or false
 	public boolean isBoardValid() {
 		return (start != null && start.getType() == Types.Start && end != null && end.getType() == Types.End);
@@ -316,12 +318,6 @@ public class DrawPanel extends JPanel{
 	private int hCost(Pixel p){
 		return distance(p,end);
 	}
-
-	//setting real time variable to control real time updates
-	public void setRealTime(boolean auto_solve) {this.auto_solve = auto_solve;}
-	
-	//setting delay variable to control animation
-	public void setAnimation(boolean animation) {this.animation = animation;}	
 
 	//setting the current operation - wall,start,end,erase
 	public void setCurrentOp(String Op) {current_op = Op;}
