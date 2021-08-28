@@ -135,13 +135,10 @@ public class DrawPanel extends JPanel{
 	//this method uses the A star algorithm to find the shortest path between start and end
 	public boolean solve() {
 		resetData(); // resetting any previous data
-		//setting start cost
-		start.setGCost(0);
+		start.setGCost(0);//setting start cost
 		start.setFCost(hCost(start));
-		//adding to the organized list the starting point
-		List.addOrganize(start);
-		//while the list isn't empty keep exploring nodes,
-		while(!Thread.currentThread().isInterrupted() && !List.isEmpty())
+		List.addOrganize(start);//adding to the organized list the starting point
+		while(!Thread.currentThread().isInterrupted() && !List.isEmpty())//while the list isn't empty keep exploring nodes,
 			if(!Thread.currentThread().isInterrupted() && calculateNear(List.pop())) {// if caluclateNear returns true -> reached the end
 				traverseBack(); //reached the end traverse back the path we came
 				return true; //return true to indicate we found a path
@@ -151,14 +148,12 @@ public class DrawPanel extends JPanel{
 	
 	//This function traverses back the path once we found the end point
 	private void traverseBack() {
-
 		Pixel tmp=end;
 		while(tmp!=null) {
 			tmp.setStatus(Status.Path);
 			tmp=tmp.getFather();
 			delay();
 		}
-		
 	}
 
 	//This function is used for the A star algorithm to calculate all the near pixels and choose which path to take
@@ -171,8 +166,8 @@ public class DrawPanel extends JPanel{
 				//if(dx == 0 && dy == 0) //use if to allow diagonal movement
 				if(!(dx == 0 ^ dy == 0)) // use to forbid diagonal
 					continue;
-				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
-					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
+				if(p.getCol() + dx < resolution && p.getRow() + dy < resolution && p.getCol() + dx >= 0 && p.getRow() + dy >= 0) {
+					neighbor = Pixel_arr.get(p.getCol() +dx).get(p.getRow() + dy);
 					if(neighbor.getType() == Types.Ground && neighbor.getSearchStatus() != Status.Closed) {
 						if(p.getGCost()+distance(p, neighbor) < neighbor.getGCost()) { //Checks if we need to update costs
 							neighbor.setFather(p);   //setting the father
@@ -219,8 +214,8 @@ public class DrawPanel extends JPanel{
 				dx=0;
 				dy=-2;
 			}
-				if(p.getXIndex() + dx < resolution && p.getYIndex() + dy < resolution && p.getXIndex() + dx >= 0 && p.getYIndex() + dy >= 0) {
-					neighbor = Pixel_arr.get(p.getXIndex() +dx).get(p.getYIndex() + dy);
+				if(p.getCol() + dx < resolution && p.getRow() + dy < resolution && p.getCol() + dx >= 0 && p.getRow() + dy >= 0) {
+					neighbor = Pixel_arr.get(p.getCol() +dx).get(p.getRow() + dy);
 					if(!neighbor.getVisited())
 						return neighbor;
 				}
@@ -249,7 +244,6 @@ public class DrawPanel extends JPanel{
 					Pixel_arr.get(i).get(j).setType(Types.Wall);
 				}
 
-
 		//Creating the stack and helper variables
 		Stack<Pixel> stack = new Stack<Pixel>();
 		Pixel current, neighbor;
@@ -266,7 +260,7 @@ public class DrawPanel extends JPanel{
 			if(neighbor!=null) { //if no neighbors left get from stack,
 				stack.push(current); //pushing the current to stack
 				//removing wall between current and neighbor
-				Pixel_arr.get((current.getXIndex() + neighbor.getXIndex()) /2).get((current.getYIndex() + neighbor.getYIndex()) /2).setType(Types.Ground);
+				Pixel_arr.get((current.getCol() + neighbor.getCol()) /2).get((current.getRow() + neighbor.getRow()) /2).setType(Types.Ground);
 				delay(); //adding delay for maze creation for animation
 				neighbor.setVisited(true);// setting visited
 				stack.push(neighbor); //pushing neighbor to stack
@@ -298,7 +292,7 @@ public class DrawPanel extends JPanel{
 	//FOR ANIMATION
 	private void delay() {
 		try {
-			TimeUnit.MICROSECONDS.sleep(80000/resolution);
+			TimeUnit.MICROSECONDS.sleep(100000/resolution);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}

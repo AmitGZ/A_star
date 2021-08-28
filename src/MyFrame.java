@@ -1,13 +1,14 @@
-import java.awt.event.*;
-import java.util.*;
-import javax.swing.*;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 public class MyFrame extends JFrame{
 	private JPanel button_panel;
@@ -59,9 +60,8 @@ public class MyFrame extends JFrame{
 		public void actionPerformed(ActionEvent event)
 		{
 			draw_panel.interruptAndWait();
-			if(event.getSource() == reset) {
+			if(event.getSource() == reset) 
 				draw_panel.resetTotal(); //total reset
-			}
 			else if(event.getSource() == create_maze)
 				draw_panel.createMaze(); //create maze
 		}

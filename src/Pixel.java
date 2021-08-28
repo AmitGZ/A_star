@@ -1,27 +1,23 @@
-import java.awt.event.*;
-import java.util.concurrent.TimeUnit;
-
-import javax.swing.*;
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 
 enum Types {Ground, Wall, Start, End}
 
 enum Status{Blank, Open, Closed,Path}
 
 public class Pixel extends JLabel{
-	 private int x_index , y_index;
+	 private final int col , row;
 	 private Types type; // Ground, Wall, Start or End 
 	 private Status search_status; //initialized as false
 	 private int f_cost, g_cost;
 	 private Pixel Father; 
 	 private boolean isVisited; 
 	
-	Pixel(int x, int y){
-		x_index=x;
-		y_index=y;
+	Pixel(int col, int row){
+		this.col=col;
+		this.row=row;
 		type = Types.Ground; // initializing all as ground
 		search_status = Status.Blank; // initializing all as blank 
 		g_cost = f_cost = Integer.MAX_VALUE; // for A_star algorithm
@@ -31,19 +27,20 @@ public class Pixel extends JLabel{
 	}
 		
 	public void setType(Types type) {
-		if(type==Types.Start) { 
-			setBackground(Color.green);
-			setText("o");
+		if(type==Types.Ground) { 
+			setBackground(Color.white);
+			setText(null);
+		}
+		else if(type ==Types.Wall) {
+			setBackground(Color.black);
 		}
 		else if(type ==Types.End) {
 			setBackground(Color.blue);
 			setText("x");
 		}
-		else if(type ==Types.Wall) 
-			setBackground(Color.black);
-		else { //Ground
-			setBackground(Color.white);
-			setText(null);
+		else { //Start
+			setBackground(Color.green);
+			setText("o");
 		}
 		this.type=type;
 		update(this.getGraphics()); //FOR ANIMATION
@@ -77,11 +74,10 @@ public class Pixel extends JLabel{
 		setFather(null);
 	}
 	
-	
 	// Getters and Setters
-	public int getXIndex() {return x_index;}
+	public int getCol() {return col;}
 
-	public int getYIndex() {return y_index;}
+	public int getRow() {return row;}
 	
 	public Types getType() {return type;}
 	
@@ -102,5 +98,4 @@ public class Pixel extends JLabel{
 	public void setVisited(boolean isVisited) {this.isVisited=isVisited;}
 	
 	public boolean getVisited() {return isVisited;}
-	
 }
