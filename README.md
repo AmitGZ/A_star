@@ -1,7 +1,6 @@
 # A* Pathfinding Algorithm
 
 
-![Alt text](/ScreenCaps/Maze.PNG?raw=true "Optional Title")
 ![Alt Text](/ScreenCaps/maze_animation.gif?raw=true "Optional Title")
 # Preview
 
