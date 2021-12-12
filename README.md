@@ -2,7 +2,7 @@
 
 
 ![Alt text](/ScreenCaps/Maze.PNG?raw=true "Optional Title")
-
+![Alt Text](/ScreenCaps/maze_animation.gif?raw=true "Optional Title")
 # Preview
 
 This is an interactive program to visualize the A* pathfinding algorithm, A* is a graph traversal and path search algorithm, which is often used in many fields of computer science due to its completeness, optimality, and optimal efficiency.
